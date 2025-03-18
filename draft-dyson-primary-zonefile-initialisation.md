@@ -74,6 +74,8 @@ Broader provisioning of the base nameserver configuration is beyond the scope of
 
 The following is in addition to the conventions and definitions as defined in DNS Catalog Zones ({{RFC9432}}).
 
+The use of parenthesis in the examples is as described in {{RFC1035}} Section 5.1.
+
 ## Primary Server
 
 Within DNS servers, specifically when transferring zones to other servers, there is the concept of a primary server and a secondary server in each transfer relationship.
@@ -86,8 +88,6 @@ However, within this document, the term "primary server" is used specifically to
 
 The term "master file" is as per the description in {{RFC1035}} Section 5, noting that some software products offer data stores for the master file that are not an actual file on a filesystem, such as a database.
 
-The use of parenthesis in the examples is as described in {{RFC1035}} Section 5.1.
-
 # Catalog Zone Properties
 
 This section specifies new Catalog Zone level properties, additional to those defined in DNS Catalog Zones ({{RFC9432}}).
@@ -96,17 +96,27 @@ If initialisation of the underlying master file for the member zone is not requi
 
 However, if the initialisation of the underlying master file for the member zone is enabled, and the properties and parameters defined below constitute a broken configuration as defined in this document, then the catalog is broken, and MUST NOT be processed (DNS Catalog Zones Section 5.1 ({{RFC9432}})).
 
+## Schema Version (version property)
+
+For this memo, the value of the version.$CATZ TXT resource record MUST be set to "3".
+
+### Example
+
+~~~
+version.$CATZ 0 IN TXT "3"
+~~~
+
 ## Zone File Initialisation (init property)
 
 When suitable configuration is activated in the implementation, and a new member zone entry is added to the catalog, the primary server MUST create the underlying master file for the zone using the values of the properties and parameters outlined in the init property.
 
-The init property is the parent label to the other labels that facilitate the adding of the various properties and parameters.
+It is not necessary for the catalog zone's primary server to be the member zone's primary server, however, it is expected that the same server is the primary server for all member zones within a given catalog zone.
 
 The implementation may permit the following on a global, or per catalog basis, by way of suitable configuration parameters:
 
   * The master file is ONLY created for the zone if the master file does not already exist
   * The master file is NEVER created (effectively, the initialisation capability is disabled for this catalog or primary server, and the master file would be expected to exist as is the case before this document)
-  * The master file is ALWAYS created, overwriting any existing master file for the zone
+  * The master file is ALWAYS created when a new zone is added to the catalog zone, overwriting any existing master file for the zone
 
 The second of the above options can facilitate the initialisation of a downstream signer configuration without necessarily being used to signal the initial state of the zone's master file on the primary server.
 
@@ -116,7 +126,7 @@ A number of sub-properties, expressed as labels within the bailiwick of the "ini
 
 The soa property is used to specify the SOA that will be applied to the created zone file for the member zone.
 
-There MUST be one and ONLY one soa property record.
+There MUST be one and ONLY one soa property record defined in a given scope.
 
 Multiple soa property records within a given scope constitutes a broken catalog zone.
 
@@ -132,7 +142,7 @@ The first being the MNAME value, the second being the RNAME value, and the third
 
 All three MUST be present.
 
-The MNAME and RNAME MUST be fully qualified, however a terminal @ can be supplied to indicate the member zone's nasme. In this case, the @ label MUST be substituted with the member zone's name at zone file creation. See also {{generalBehaviourSection}}.
+The MNAME and RNAME MUST be fully qualified, however a terminal @ label can be supplied to indicate the member zone's name. In this case, the @ label MUST be substituted with the member zone's name at zone file creation. See also {{generalBehaviourSection}}.
 
 ### Example
 
@@ -159,7 +169,7 @@ The ns property can be specified multiple times, with one nameserver specified p
 
 ### name Parameter
 
-The "name" parameter MUST be present, and contains the name of the nameserver as it is intended to appear in the corresponding NS record's RDATA in the zone's master file. See {{generalBehaviourSection}}.
+The "name" parameter MUST be present, and contains the hostname of the nameserver as it is intended to appear in the corresponding NS record's RDATA in the zone's master file. See {{generalBehaviourSection}}.
 
 The value of the "name" parameter MUST be compliant with {{RFC1035}} Section 3.3.11.
 
@@ -177,6 +187,8 @@ The value of the "ipv6" parameter, if present, MUST be a valid IPv6 address, com
 
 An ns property record that contains an in-bailiwick name, but does not contain at least one address parameter constitutes a broken catalog zone.
 
+Only records within the member zone are within the scope of this document; if the primary server is also coincidentally the primary server for a member zone's parent, regardless of whether the parent zone is also a member zone, it is the responsibility of the parent zone's administrator to ensure the delegation and any required glue resource records are present in the parent zone.
+
 ### Example
 
 ~~~~
@@ -188,13 +200,15 @@ ns.init.$CATZ 0 TXT ( "name=another.name.server."
 
 ## DNSSEC (dnssec Property)
 
-Placeholder for definition of how to signal to a zone's signer(s) that we wish to initialise keys and sign the newly created zone, noting that the signer may be further downstream consuming the catalog, and thus not necessarily the zone's primary server.
+Placeholder for definition of how to signal to a zone's signer(s) that we wish to initialise keys and sign the newly created zone, noting that the signer may be further downstream consuming the catalog, and thus not necessarily the member zone's primary server.
 
 # Member Zone Properties {#memberZoneSection}
 
-The default properties outlined above can be overridden per member zone and/or per group. If properties are specified in a more specific scope than the defaults, the most specific scope MUST be used.
+The default properties outlined above can be overridden per member zone. If properties are specified in a more specific scope than the defaults, the most specific scope MUST be used.
 
-A subset MAY be specified here; for example, the SOA could be omitted here and just the NS records or DNSSEC parameters specified, with the omitted properties inherited from the catalog level values.
+A subset MAY be specified in a more specific scope, for example, the SOA could be omitted, and just the NS records or DNSSEC parameters specified.
+
+The omitted properties would be inherited from the catalog level values.
 
 ~~~~
 <unique-N>.zones.$CATZ          0 PTR example.com.
@@ -214,7 +228,7 @@ The scope of this document is solely concerned with the initialisation of a new 
 
 ## General Behaviour {#generalBehaviourSection}
 
-Some of the parameters specified in the initialisation properties contain hostnames, for example in the NS records and in the SOA. These will be used to specify values in the corresponding resource records in the member zone's file. The hostnames MUST be fully qualified in the parameter specification in the property. A terminal @ label MUST be substituted by the member zone name at the point of zone file creation.
+Some of the parameters specified in the initialisation properties contain domain-name values as defined in {{RFC1035}} Section 3.3, for example in the NS records and in the SOA. These will be used to specify values in the corresponding resource records in the member zone's file. The domain-name values MUST be fully qualified in the parameter specification in the property. A terminal @ label MUST be substituted by the member zone name at the point of zone file creation.
 
 # Security Considerations
 
@@ -228,14 +242,14 @@ Registry Name: DNS Catalog Zones Properties
 
 Reference: this document
 
-| Property Prefix | Description        | Status          | Reference     |
-| init            | Initialisation     | Standards Track | this document |
-| soa             | Start Of Authority | Standards Track | this document |
-| ns              | Name Server        | Standards Track | this document |
-| dnssec          | DNSSEC             | Standards Track | this document |
+| Property Prefix | Description                    | Status          | Reference     |
+| init            | Zone Initialisation Properties | Standards Track | this document |
+| soa.init        | Start Of Authority Property    | Standards Track | this document |
+| ns.init         | Name Server Property           | Standards Track | this document |
+| dnssec.init     | DNSSEC Properties              | Standards Track | this document |
 {:title="DNS Catalog Zones Properies Registry"}
 
-Field meanings are unchanged from DNS Catalog Zones ({{RFC9432}}).
+Field meanings are unchanged from the definitions in DNS Catalog Zones ({{RFC9432}}).
 
 --- back
 
@@ -270,6 +284,8 @@ ns.hajhsjha.zones.catz.invalid. 0 TXT ( "name=ns1.example.net "
 
 ## example.com Master File Example
 
+This is the resulting zonefile for example.com as initilised from the above catalog zone example.
+
 ~~~~
 example.com.     3600 SOA ns1.example.com. hostmaster.example.com. (
                            1 14400 900 2419200 3600 )
@@ -282,6 +298,8 @@ ns2.example.com. 3600 AAAA 2001:db8::2
 ~~~~
 
 ## example.net Master File Example
+
+This is the resulting zonefile for example.net as initilised from the above catalog zone example.
 
 ~~~~
 example.net.     3600 SOA ns1.example.com. hostmaster.example.com. (

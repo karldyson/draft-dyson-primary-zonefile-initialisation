@@ -4,9 +4,9 @@
 
 Network Working Group                                           K. Dyson
 Internet-Draft                                                Nominet UK
-Updates: 9432 (if approved)                                18 March 2025
+Updates: 9432 (if approved)                                19 March 2025
 Intended status: Standards Track                                        
-Expires: 19 September 2025
+Expires: 20 September 2025
 
 
          Initialisation of Zone Files on the DNS Primary Server
@@ -42,7 +42,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 September 2025.
+   This Internet-Draft will expire on 20 September 2025.
 
 Copyright Notice
 
@@ -75,14 +75,20 @@ Table of Contents
        3.4.1.  name Parameter
        3.4.2.  ipv4 and ipv6 Parameters
        3.4.3.  Example
-     3.5.  DNSSEC (dnssec Property)
+     3.5.  DNSSEC (dnssec property)
+       3.5.1.  Enabling Signing (enabled property)
+       3.5.2.  Policy (policy property)
+       3.5.3.  Keys (key property)
    4.  Member Zone Properties
-     4.1.  Change Of Ownership (coo Property)
+     4.1.  Change Of Ownership (coo property)
    5.  Name Server Behaviour
      5.1.  General Behaviour
-   6.  Security Considerations
-   7.  IANA Considerations
-   8.  Normative References
+     5.2.  Member Zone Removal
+     5.3.  Zone-Associated State Reset
+   6.  Implementation and Operational Notes
+   7.  Security Considerations
+   8.  IANA Considerations
+   9.  Normative References
    Appendix A.  Examples
      A.1.  Catalog Zone Example
      A.2.  example.com Master File Example
@@ -210,9 +216,8 @@ Table of Contents
    of the properties and parameters outlined in the init property.
 
    It is not necessary for the catalog zone's primary server to be the
-   member zone's primary server, however, it is expected that the same
-   server is the primary server for all member zones within a given
-   catalog zone.
+   member zone's primary server, however, the same server MUST be the
+   primary server for all member zones within a given catalog zone.
 
    The implementation may permit the following on a global, or per
    catalog basis, by way of suitable configuration parameters:
@@ -349,12 +354,108 @@ Table of Contents
    ns.init.$CATZ 0 TXT ( "name=another.name.server."
          "ipv4=192.0.2.129 ipv6=2001:db8:44::1" )
 
-3.5.  DNSSEC (dnssec Property)
+3.5.  DNSSEC (dnssec property)
 
    Placeholder for definition of how to signal to a zone's signer(s)
    that we wish to initialise keys and sign the newly created zone,
    noting that the signer may be further downstream consuming the
    catalog, and thus not necessarily the member zone's primary server.
+
+   If the catalog zone consumer is configured to be a signer of the
+   member zone being processed, the server SHOULD apply the policy in
+   the catalog.  This action does not have to be constrained to the
+   point at which a member zone is newly added to the catalog zone.  If
+   a server is re-configured such that signing is added to the
+   configuration for a given catalog zone, it SHOULD apply the policy to
+   existing members zones within the catalog.
+
+   If the server consuming the catalog zone is not configured to be a
+   signer for the member zones in the catalog, records within the
+   bailwick of the dnssec property record MUST be ignored.
+
+   The dnssec property is OPTIONAL and if absent then no special
+   processing relating to DNSSEC should occur.
+
+3.5.1.  Enabling Signing (enabled property)
+
+   The enabled property is used to signal whether zones should be
+   signed.  Because this can be configured at both the catalog zone
+   level, as well as at the member zone level, it facilitates the
+   ability to, for example, set policy parameters at the catalog level,
+   disable signing at the catalog level, and then enable signing on a
+   per member zone level.  In this example, the signed member zones
+   would pick up the policy from the catalog level.
+
+3.5.1.1.  Parameters
+
+   The only parameter is a boolean, stored as a character-string in the
+   RDATA of a TXT resource record.
+
+3.5.1.2.  Examples
+
+   enabled.dnssec.init.$CATZ IN TXT "0"
+
+3.5.2.  Policy (policy property)
+
+   If the implementation has the concept of pre-configured DNSSEC
+   policy, the policy property csan be used to indicate the name of a
+   configured policy.
+
+   If the policy property if configured, then key property records MUST
+   be ignored.
+
+   If the policy is not configured on the designated signing server,
+   then an error SHOULD be logged.  Processing SHOULD continue as if the
+   entire dnssec property section was absent.
+
+3.5.2.1.  Example
+
+   policy.dnssec.init.$CATZ IN TXT "some-dnssec-policy-name"
+
+3.5.3.  Keys (key property)
+
+   The key property is used to configure keys that will be applied to
+   the member zone(s) in the catalog.
+
+   In the case of a single combined key (type csk), at least one key
+   MUST be configured.
+
+   In the case of split keys (types zsk, ksk), at least one key of each
+   type MUST be configured.
+
+3.5.3.1.  type parameter
+
+   The type parameter MUST be present, and is used to convey the key
+   type, and MUST be one of csk, zsk or ksk
+
+3.5.3.2.  alg parameter
+
+   The alg parameter MUST be present, and is used to convey the key
+   algorithm.
+
+3.5.3.3.  bits parameter
+
+   The bits parameter is OPTIONAL, depending on whether this is relevant
+   to the algorithm being used.
+
+3.5.3.4.  lifetime parameter
+
+   The lifetime parameter is OPTIONAL and is used to specify how long
+   the key should be published for before being rolled.
+
+   A value of zero (0) is used to indicate "unlimited" whereby the key
+   will not be rolled.  This is also the default if unspecified.
+
+3.5.3.5.  Example
+
+   Combined Key
+
+key.dnskey.init.$CATZ IN TXT "type=csk alg=RSASHA256 bits=2048 lifetime=0"
+
+   Split Key
+
+key.dnssec.init.$CATZ IN TXT "type=ksk alg=ECDSAP256SHA256"
+key.dnssec.init.$CATZ IN TXT "type=zsk alg=ECDSAP256SHA256 lifetime=90D"
 
 4.  Member Zone Properties
 
@@ -374,8 +475,9 @@ Table of Contents
          "<rname>" "<refresh> <retry> <expire> <minimum>" )
    ns.init.<unique-N>.zones.$CATZ  0 TXT ( "name=some.name.server. "
          "ipv4=192.0.2.1 ipv6=2001:db8::1" )
+   enabled.dnssec.<unique-N>.zones.$CATZ IN TXT "1"
 
-4.1.  Change Of Ownership (coo Property)
+4.1.  Change Of Ownership (coo property)
 
    There is no change to the coo property; if the member zone changes
    ownership to another catalog, fundamentally, the zone's master file
@@ -385,6 +487,12 @@ Table of Contents
    initialisation of a new zone's master file, and so in the case of the
    zone changing ownership, the initialisation parameters MUST NOT be
    processed.
+
+   Noting that the primary server for a given catalog's member zones may
+   not be the primary server for the catalog zone itself, nor the
+   primary server for another catalog's member zones, operators should
+   consider their implementation's configuration when planning a change
+   of ownership operation.
 
 5.  Name Server Behaviour
 
@@ -399,12 +507,37 @@ Table of Contents
    substituted by the member zone name at the point of zone file
    creation.
 
-6.  Security Considerations
+5.2.  Member Zone Removal
+
+   If the member zone is removed from the catalog zone, then the zone's
+   master file MUST be removed.
+
+5.3.  Zone-Associated State Reset
+
+   In the event of a zone state reset being carried out, the state of
+   the zone's master file SHOULD be reset as if the file was being
+   initialised for the first time per this document.
+
+6.  Implementation and Operational Notes
+
+   When configuring the use of catalog zones, implementations should
+   give the operator the ability to indicate whether the catalog zone
+   consumer is a primary or secondary for a given catalog's member
+   zones, along with whether the consumer is a signer of the zone.
+
+   A given consumer MAY be any combination of primary, secondary,
+   primary+signer or secondary+signer, but of course cannot be both
+   primary _and_ secondary.
+
+   It is not mandatory that the primary server for a given catalog zone
+   is also the primary server for the catalog's member zones.
+
+7.  Security Considerations
 
    This document does not alter the security considerations outlined in
    DNS Catalog Zones ([RFC9432]).
 
-7.  IANA Considerations
+8.  IANA Considerations
 
    IANA is requested to add the following entries to the registry:
 
@@ -412,28 +545,39 @@ Table of Contents
 
    Reference: this document
 
-     +=================+=====================+===========+===========+
-     | Property Prefix | Description         | Status    | Reference |
-     +=================+=====================+===========+===========+
-     | init            | Zone Initialisation | Standards | this      |
-     |                 | Properties          | Track     | document  |
-     +-----------------+---------------------+-----------+-----------+
-     | soa.init        | Start Of Authority  | Standards | this      |
-     |                 | Property            | Track     | document  |
-     +-----------------+---------------------+-----------+-----------+
-     | ns.init         | Name Server         | Standards | this      |
-     |                 | Property            | Track     | document  |
-     +-----------------+---------------------+-----------+-----------+
-     | dnssec.init     | DNSSEC Properties   | Standards | this      |
-     |                 |                     | Track     | document  |
-     +-----------------+---------------------+-----------+-----------+
+   +=====================+=====================+===========+===========+
+   | Property Prefix     | Description         | Status    | Reference |
+   +=====================+=====================+===========+===========+
+   | init                | Zone                | Standards | this      |
+   |                     | Initialisation      | Track     | document  |
+   |                     | Properties          |           |           |
+   +---------------------+---------------------+-----------+-----------+
+   | soa.init            | Start Of            | Standards | this      |
+   |                     | Authority           | Track     | document  |
+   |                     | Property            |           |           |
+   +---------------------+---------------------+-----------+-----------+
+   | ns.init             | Name Server         | Standards | this      |
+   |                     | Property            | Track     | document  |
+   +---------------------+---------------------+-----------+-----------+
+   | dnssec.init         | DNSSEC              | Standards | this      |
+   |                     | Properties          | Track     | document  |
+   +---------------------+---------------------+-----------+-----------+
+   | enabled.dnssec.init | Enable/Disable      | Standards | this      |
+   |                     | DNSSEC Signing      | Track     | document  |
+   +---------------------+---------------------+-----------+-----------+
+   | policy.dnssec.init  | DNSSEC Policy       | Standards | this      |
+   |                     |                     | Track     | document  |
+   +---------------------+---------------------+-----------+-----------+
+   | key.dnssec.init     | DNSSEC Keys         | Standards | this      |
+   |                     |                     | Track     | document  |
+   +---------------------+---------------------+-----------+-----------+
 
                Table 1: DNS Catalog Zones Properies Registry
 
    Field meanings are unchanged from the definitions in DNS Catalog
    Zones ([RFC9432]).
 
-8.  Normative References
+9.  Normative References
 
    [RFC1035]  Mockapetris, P., "Domain names - implementation and
               specification", STD 13, RFC 1035, DOI 10.17487/RFC1035,

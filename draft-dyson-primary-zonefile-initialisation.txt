@@ -4,9 +4,9 @@
 
 Network Working Group                                           K. Dyson
 Internet-Draft                                                Nominet UK
-Updates: 9432 (if approved)                                19 March 2025
+Updates: 9432 (if approved)                                20 March 2025
 Intended status: Standards Track                                        
-Expires: 20 September 2025
+Expires: 21 September 2025
 
 
          Initialisation of Zone Files on the DNS Primary Server
@@ -42,7 +42,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 September 2025.
+   This Internet-Draft will expire on 21 September 2025.
 
 Copyright Notice
 
@@ -66,7 +66,6 @@ Table of Contents
      2.2.  Master File
    3.  Catalog Zone Properties
      3.1.  Schema Version (version property)
-       3.1.1.  Example
      3.2.  Zone File Initialisation (init property)
      3.3.  Start Of Authority (soa property)
        3.3.1.  Parameters
@@ -75,10 +74,6 @@ Table of Contents
        3.4.1.  name Parameter
        3.4.2.  ipv4 and ipv6 Parameters
        3.4.3.  Example
-     3.5.  DNSSEC (dnssec property)
-       3.5.1.  Enabling Signing (enabled property)
-       3.5.2.  Policy (policy property)
-       3.5.3.  Keys (key property)
    4.  Member Zone Properties
      4.1.  Change Of Ownership (coo property)
    5.  Name Server Behaviour
@@ -95,12 +90,11 @@ Table of Contents
      A.3.  example.net Master File Example
    Appendix B.  Author Notes/Thoughts
      B.1.  Is catalog zones the right place for this?
-     B.2.  DNSSEC
-     B.3.   Properties
-       B.3.1.   General
-       B.3.2.  coo Property
-       B.3.3.  soa Property
-       B.3.4.  ns Property
+     B.2.   Properties
+       B.2.1.   General
+       B.2.2.  coo Property
+       B.2.3.  soa Property
+       B.2.4.  ns Property
    Appendix C.  Change Log
      C.1.  00 - Initial draft
    Acknowledgments
@@ -139,8 +133,7 @@ Table of Contents
    populated with basic minimal initial zone data.
 
    The scope of this document is confined to the initial provisioning of
-   the zone file on the primary server, and optional signalling of
-   initial DNSSEC policy or configuration (see Appendix B.2).
+   the zone file on the primary server.
 
    Broader provisioning of the base nameserver configuration is beyond
    the scope of this document.
@@ -201,12 +194,15 @@ Table of Contents
 
 3.1.  Schema Version (version property)
 
-   For this memo, the value of the version.$CATZ TXT resource record
-   MUST be set to "3".
+   For this memo, the value of the version.$CATZ TXT resource record is
+   unchanged.
 
-3.1.1.  Example
-
-   version.$CATZ 0 IN TXT "3"
+   DNS Catalog Zones ([RFC9432]) Section 3 is clear that "Catalog
+   consumers MUST ignore any RRs in the catalog zone for which no
+   processing is specified or which are otherwise not supported by the
+   implementation." and as such the addition of the records outlined in
+   this document will be ignored by implementations that do not
+   recognise them.
 
 3.2.  Zone File Initialisation (init property)
 
@@ -354,109 +350,6 @@ Table of Contents
    ns.init.$CATZ 0 TXT ( "name=another.name.server."
          "ipv4=192.0.2.129 ipv6=2001:db8:44::1" )
 
-3.5.  DNSSEC (dnssec property)
-
-   Placeholder for definition of how to signal to a zone's signer(s)
-   that we wish to initialise keys and sign the newly created zone,
-   noting that the signer may be further downstream consuming the
-   catalog, and thus not necessarily the member zone's primary server.
-
-   If the catalog zone consumer is configured to be a signer of the
-   member zone being processed, the server SHOULD apply the policy in
-   the catalog.  This action does not have to be constrained to the
-   point at which a member zone is newly added to the catalog zone.  If
-   a server is re-configured such that signing is added to the
-   configuration for a given catalog zone, it SHOULD apply the policy to
-   existing members zones within the catalog.
-
-   If the server consuming the catalog zone is not configured to be a
-   signer for the member zones in the catalog, records within the
-   bailwick of the dnssec property record MUST be ignored.
-
-   The dnssec property is OPTIONAL and if absent then no special
-   processing relating to DNSSEC should occur.
-
-3.5.1.  Enabling Signing (enabled property)
-
-   The enabled property is used to signal whether zones should be
-   signed.  Because this can be configured at both the catalog zone
-   level, as well as at the member zone level, it facilitates the
-   ability to, for example, set policy parameters at the catalog level,
-   disable signing at the catalog level, and then enable signing on a
-   per member zone level.  In this example, the signed member zones
-   would pick up the policy from the catalog level.
-
-3.5.1.1.  Parameters
-
-   The only parameter is a boolean, stored as a character-string in the
-   RDATA of a TXT resource record.
-
-3.5.1.2.  Examples
-
-   enabled.dnssec.init.$CATZ IN TXT "0"
-
-3.5.2.  Policy (policy property)
-
-   If the implementation has the concept of pre-configured DNSSEC
-   policy, the policy property csan be used to indicate the name of a
-   configured policy.
-
-   If the policy property if configured, then key property records MUST
-   be ignored.
-
-   If the policy is not configured on the designated signing server,
-   then an error SHOULD be logged.  Processing SHOULD continue as if the
-   entire dnssec property section was absent.
-
-3.5.2.1.  Example
-
-   policy.dnssec.init.$CATZ IN TXT "some-dnssec-policy-name"
-
-3.5.3.  Keys (key property)
-
-   The key property is used to configure keys that will be applied to
-   the member zone(s) in the catalog.
-
-   In the case of a single combined key (type csk), at least one key
-   MUST be configured.
-
-   In the case of split keys (types zsk, ksk), at least one key of each
-   type MUST be configured.
-
-3.5.3.1.  type parameter
-
-   The type parameter MUST be present, and is used to convey the key
-   type, and MUST be one of csk, zsk or ksk
-
-3.5.3.2.  alg parameter
-
-   The alg parameter MUST be present, and is used to convey the key
-   algorithm.
-
-3.5.3.3.  bits parameter
-
-   The bits parameter is OPTIONAL, depending on whether this is relevant
-   to the algorithm being used.
-
-3.5.3.4.  lifetime parameter
-
-   The lifetime parameter is OPTIONAL and is used to specify how long
-   the key should be published for before being rolled.
-
-   A value of zero (0) is used to indicate "unlimited" whereby the key
-   will not be rolled.  This is also the default if unspecified.
-
-3.5.3.5.  Example
-
-   Combined Key
-
-key.dnskey.init.$CATZ IN TXT "type=csk alg=RSASHA256 bits=2048 lifetime=0"
-
-   Split Key
-
-key.dnssec.init.$CATZ IN TXT "type=ksk alg=ECDSAP256SHA256"
-key.dnssec.init.$CATZ IN TXT "type=zsk alg=ECDSAP256SHA256 lifetime=90D"
-
 4.  Member Zone Properties
 
    The default properties outlined above can be overridden per member
@@ -464,8 +357,7 @@ key.dnssec.init.$CATZ IN TXT "type=zsk alg=ECDSAP256SHA256 lifetime=90D"
    defaults, the most specific scope MUST be used.
 
    A subset MAY be specified in a more specific scope, for example, the
-   SOA could be omitted, and just the NS records or DNSSEC parameters
-   specified.
+   SOA could be omitted, and just the NS records specified.
 
    The omitted properties would be inherited from the catalog level
    values.
@@ -475,7 +367,6 @@ key.dnssec.init.$CATZ IN TXT "type=zsk alg=ECDSAP256SHA256 lifetime=90D"
          "<rname>" "<refresh> <retry> <expire> <minimum>" )
    ns.init.<unique-N>.zones.$CATZ  0 TXT ( "name=some.name.server. "
          "ipv4=192.0.2.1 ipv6=2001:db8::1" )
-   enabled.dnssec.<unique-N>.zones.$CATZ IN TXT "1"
 
 4.1.  Change Of Ownership (coo property)
 
@@ -545,32 +436,18 @@ key.dnssec.init.$CATZ IN TXT "type=zsk alg=ECDSAP256SHA256 lifetime=90D"
 
    Reference: this document
 
-   +=====================+=====================+===========+===========+
-   | Property Prefix     | Description         | Status    | Reference |
-   +=====================+=====================+===========+===========+
-   | init                | Zone                | Standards | this      |
-   |                     | Initialisation      | Track     | document  |
-   |                     | Properties          |           |           |
-   +---------------------+---------------------+-----------+-----------+
-   | soa.init            | Start Of            | Standards | this      |
-   |                     | Authority           | Track     | document  |
-   |                     | Property            |           |           |
-   +---------------------+---------------------+-----------+-----------+
-   | ns.init             | Name Server         | Standards | this      |
-   |                     | Property            | Track     | document  |
-   +---------------------+---------------------+-----------+-----------+
-   | dnssec.init         | DNSSEC              | Standards | this      |
-   |                     | Properties          | Track     | document  |
-   +---------------------+---------------------+-----------+-----------+
-   | enabled.dnssec.init | Enable/Disable      | Standards | this      |
-   |                     | DNSSEC Signing      | Track     | document  |
-   +---------------------+---------------------+-----------+-----------+
-   | policy.dnssec.init  | DNSSEC Policy       | Standards | this      |
-   |                     |                     | Track     | document  |
-   +---------------------+---------------------+-----------+-----------+
-   | key.dnssec.init     | DNSSEC Keys         | Standards | this      |
-   |                     |                     | Track     | document  |
-   +---------------------+---------------------+-----------+-----------+
+     +=================+=====================+===========+===========+
+     | Property Prefix | Description         | Status    | Reference |
+     +=================+=====================+===========+===========+
+     | init            | Zone Initialisation | Standards | this      |
+     |                 | Properties          | Track     | document  |
+     +-----------------+---------------------+-----------+-----------+
+     | soa.init        | Start Of Authority  | Standards | this      |
+     |                 | Property            | Track     | document  |
+     +-----------------+---------------------+-----------+-----------+
+     | ns.init         | Name Server         | Standards | this      |
+     |                 | Property            | Track     | document  |
+     +-----------------+---------------------+-----------+-----------+
 
                Table 1: DNS Catalog Zones Properies Registry
 
@@ -718,24 +595,9 @@ B.1.  Is catalog zones the right place for this?
 
    TODO - add more detail explaining the above, reasoning, etc...?
 
-B.2.  DNSSEC
+B.2.   Properties
 
-   It seems that it'd be useful to signal initial policy/settings for
-   DNSSEC in a standardised way also, but the primary might, or might
-   not be the signer; the signer may be downstream.  But it might be
-   very nice to be able to signal to the signer that it should create
-   some keys, sign the zone...
-
-   15/11 - Knot acheives this by use of the group property, setting the
-   RDATA of the group record for a member zone to the name of a pre-
-   defined template name.  However, this appears to assume that the
-   primary server is also the signer, which may not be the case.
-   Further reading required to see if this would facilitate a downstream
-   (knot) server signing in-line.
-
-B.3.   Properties
-
-B.3.1.   General
+B.2.1.   General
 
    Should the properties be listed in the registry as "soa.init" and
    "ns.init", given "init" itself is a placeholder label, and does not
@@ -756,7 +618,7 @@ B.3.1.   General
    SOA and NS with the expectation being that the operator then
    _replaces_ them.
 
-B.3.2.  coo Property
+B.2.2.  coo Property
 
    Are there any considerations around change of ownership that need
    mentioning or documenting here...?
@@ -764,7 +626,7 @@ B.3.2.  coo Property
    14/11 - section added to address this; is there anything else that
    needs clarifying or covering?
 
-B.3.3.  soa Property
+B.2.3.  soa Property
 
    Consideration was given as to whether things like SOA parameters
    should be individual records, but it seemed unnecessary to break them
@@ -787,7 +649,7 @@ B.3.3.  soa Property
    that the operator would immediatly overwrite them with "correct"
    values...?
 
-B.3.4.  ns Property
+B.2.4.  ns Property
 
    Is there a circular dependency or race condition issue here...?
 

@@ -64,7 +64,7 @@ Having dynamically provisioned a new zone on the primary server, the operator ma
 
 This document defines a vendor-independent mechanism of signalling to the primary server that a new file is to be created for the zone and populated with basic minimal initial zone data.
 
-The scope of this document is confined to the initial provisioning of the zone file on the primary server, and optional signalling of initial DNSSEC policy or configuration (see {{dnssecConsideration}}).
+The scope of this document is confined to the initial provisioning of the zone file on the primary server.
 
 Broader provisioning of the base nameserver configuration is beyond the scope of this document.
 
@@ -98,13 +98,9 @@ However, if the initialisation of the underlying master file for the member zone
 
 ## Schema Version (version property)
 
-For this memo, the value of the version.$CATZ TXT resource record MUST be set to "3".
+For this memo, the value of the version.$CATZ TXT resource record is unchanged.
 
-### Example
-
-~~~
-version.$CATZ 0 IN TXT "3"
-~~~
+DNS Catalog Zones ({{RFC9432}}) Section 3 is clear that "Catalog consumers MUST ignore any RRs in the catalog zone for which no processing is specified or which are otherwise not supported by the implementation." and as such the addition of the records outlined in this document will be ignored by implementations that do not recognise them.
 
 ## Zone File Initialisation (init property)
 
@@ -198,90 +194,11 @@ ns.init.$CATZ 0 TXT ( "name=another.name.server."
       "ipv4=192.0.2.129 ipv6=2001:db8:44::1" )
 ~~~~
 
-## DNSSEC (dnssec property)
-
-Placeholder for definition of how to signal to a zone's signer(s) that we wish to initialise keys and sign the newly created zone, noting that the signer may be further downstream consuming the catalog, and thus not necessarily the member zone's primary server.
-
-If the catalog zone consumer is configured to be a signer of the member zone being processed, the server SHOULD apply the policy in the catalog. This action does not have to be constrained to the point at which a member zone is newly added to the catalog zone. If a server is re-configured such that signing is added to the configuration for a given catalog zone, it SHOULD apply the policy to existing members zones within the catalog.
-
-If the server consuming the catalog zone is not configured to be a signer for the member zones in the catalog, records within the bailwick of the dnssec property record MUST be ignored.
-
-The dnssec property is OPTIONAL and if absent then no special processing relating to DNSSEC should occur.
-
-### Enabling Signing (enabled property)
-
-The enabled property is used to signal whether zones should be signed. Because this can be configured at both the catalog zone level, as well as at the member zone level, it facilitates the ability to, for example, set policy parameters at the catalog level, disable signing at the catalog level, and then enable signing on a per member zone level. In this example, the signed member zones would pick up the policy from the catalog level.
-
-#### Parameters
-
-The only parameter is a boolean, stored as a character-string in the RDATA of a TXT resource record.
-
-#### Examples
-
-~~~
-enabled.dnssec.init.$CATZ IN TXT "0"
-~~~
-
-### Policy (policy property)
-
-If the implementation has the concept of pre-configured DNSSEC policy, the policy property csan be used to indicate the name of a configured policy.
-
-If the policy property if configured, then key property records MUST be ignored.
-
-If the policy is not configured on the designated signing server, then an error SHOULD be logged. Processing SHOULD continue as if the entire dnssec property section was absent.
-
-#### Example
-
-~~~
-policy.dnssec.init.$CATZ IN TXT "some-dnssec-policy-name"
-~~~
-
-### Keys (key property)
-
-The key property is used to configure keys that will be applied to the member zone(s) in the catalog.
-
-In the case of a single combined key (type csk), at least one key MUST be configured.
-
-In the case of split keys (types zsk, ksk), at least one key of each type MUST be configured.
-
-#### type parameter
-
-The type parameter MUST be present, and is used to convey the key type, and MUST be one of csk, zsk or ksk
-
-#### alg parameter
-
-The alg parameter MUST be present, and is used to convey the key algorithm.
-
-#### bits parameter
-
-The bits parameter is OPTIONAL, depending on whether this is relevant to the algorithm being used.
-
-#### lifetime parameter
-
-The lifetime parameter is OPTIONAL and is used to specify how long the key should be published for before being rolled.
-
-A value of zero (0) is used to indicate "unlimited" whereby the key will not be rolled. This is also the default if unspecified.
-
-#### Example
-
-Combined Key
-
-~~~
-key.dnskey.init.$CATZ IN TXT "type=csk alg=RSASHA256 bits=2048 lifetime=0"
-~~~
-
-Split Key
-
-~~~
-key.dnssec.init.$CATZ IN TXT "type=ksk alg=ECDSAP256SHA256"
-key.dnssec.init.$CATZ IN TXT "type=zsk alg=ECDSAP256SHA256 lifetime=90D"
-~~~
-
 # Member Zone Properties {#memberZoneSection}
 
 The default properties outlined above can be overridden per member zone. If properties are specified in a more specific scope than the defaults, the most specific scope MUST be used.
 
-A subset MAY be specified in a more specific scope, for example, the SOA could be omitted, and just the NS records or DNSSEC parameters specified.
+A subset MAY be specified in a more specific scope, for example, the SOA could be omitted, and just the NS records specified.
 
 The omitted properties would be inherited from the catalog level values.
 
@@ -291,7 +208,6 @@ soa.init.<unique-N>.zones.$CATZ 0 TXT ( "<mname>"
       "<rname>" "<refresh> <retry> <expire> <minimum>" )
 ns.init.<unique-N>.zones.$CATZ  0 TXT ( "name=some.name.server. "
       "ipv4=192.0.2.1 ipv6=2001:db8::1" )
-enabled.dnssec.<unique-N>.zones.$CATZ IN TXT "1"
 ~~~~
 
 ## Change Of Ownership (coo property)
@@ -340,10 +256,6 @@ Reference: this document
 | init                | Zone Initialisation Properties | Standards Track | this document |
 | soa.init            | Start Of Authority Property    | Standards Track | this document |
 | ns.init             | Name Server Property           | Standards Track | this document |
-| dnssec.init         | DNSSEC Properties              | Standards Track | this document |
-| enabled.dnssec.init | Enable/Disable DNSSEC Signing  | Standards Track | this document |
-| policy.dnssec.init  | DNSSEC Policy                  | Standards Track | this document |
-| key.dnssec.init     | DNSSEC Keys                    | Standards Track | this document |
 {:title="DNS Catalog Zones Properies Registry"}
 
 Field meanings are unchanged from the definitions in DNS Catalog Zones ({{RFC9432}}).
@@ -428,12 +340,6 @@ It may be considered that this is "nameserver configuration", however, it has st
 Implementing via an extension of catalog zones feels like it closes the gap in the end-to-end ecosystem whereby catalog zones + dynamic updates gives an end-to-end approach to the creation of a zone, its underlying master file, distribution of that zone to secondary servers, and the ongoing manipulation of records in the zone.
 
 TODO - add more detail explaining the above, reasoning, etc...?
-
-## DNSSEC {#dnssecConsideration}
-
-It seems that it'd be useful to signal initial policy/settings for DNSSEC in a standardised way also, but the primary might, or might not be the signer; the signer may be downstream. But it might be very nice to be able to signal to the signer that it should create some keys, sign the zone...
-
-15/11 - Knot acheives this by use of the group property, setting the RDATA of the group record for a member zone to the name of a pre-defined template name. However, this appears to assume that the primary server is also the signer, which may not be the case. Further reading required to see if this would facilitate a downstream (knot) server signing in-line.
 
 ## Properties
 

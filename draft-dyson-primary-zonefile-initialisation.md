@@ -62,9 +62,9 @@ Operators of large scale DNS systems may want to be able to signal the creation 
 
 Having dynamically provisioned a new zone on the primary server, the operator may then manage resource records in the zone via DNS Dynamic Updates ({{RFC2136}}). In this scenario, they may also want to distribute the zones to secondary servers via DNS Catalog Zones ({{RFC9432}}).
 
-This document defines a vendor-independent mechanism of signalling to the primary server that a new file is to be created for the zone and populated with basic minimal initial zone data.
+This document defines a vendor-independent mechanism of signalling to the primary server that a new file is to be created for the new zone, populated with basic minimal initial zone data, and then loaded into the server to be authoritatively served.
 
-The scope of this document is confined to the initial provisioning of the zone file on the primary server.
+The scope of this document is confined to the initial provisioning and loading of the zone on the primary server, including the creation of it's initial zone file, configuration and state.
 
 Broader provisioning of the base nameserver configuration is beyond the scope of this document.
 
@@ -98,13 +98,13 @@ However, if the initialisation of the underlying master file for the member zone
 
 ## Schema Version (version property)
 
-For this memo, the value of the version.$CATZ TXT resource record is unchanged.
+For this memo, the value of the version resource record is unchanged.
 
 DNS Catalog Zones ({{RFC9432}}) Section 3 is clear that "Catalog consumers MUST ignore any RRs in the catalog zone for which no processing is specified or which are otherwise not supported by the implementation." and as such the addition of the records outlined in this document will be ignored by implementations that do not recognise them.
 
 ## Zone File Initialisation (init property)
 
-When suitable configuration is activated in the implementation, and a new member zone entry is added to the catalog, the primary server MUST create the underlying master file for the zone using the values of the properties and parameters outlined in the init property.
+When suitable configuration is activated in the implementation, and a new member zone entry is added to the catalog, the primary server MUST create the underlying master file for the zone using the values of the properties and parameters outlined in the init property. The implementation MUST also create the relevant dynamic zone configuration and state, load the zone, and serve it authoritatively.
 
 It is not necessary for the catalog zone's primary server to be the member zone's primary server, however, the same server MUST be the primary server for all member zones within a given catalog zone.
 
@@ -112,9 +112,7 @@ The implementation may permit the following on a global, or per catalog basis, b
 
   * The master file is ONLY created for the zone if the master file does not already exist
   * The master file is NEVER created (effectively, the initialisation capability is disabled for this catalog or primary server, and the master file would be expected to exist as is the case before this document)
-  * The master file is ALWAYS created when a new zone is added to the catalog zone, overwriting any existing master file for the zone
-
-The second of the above options can facilitate the initialisation of a downstream signer configuration without necessarily being used to signal the initial state of the zone's master file on the primary server.
+  * The master file is ALWAYS created when a new member zone is added to the catalog zone, overwriting any existing master file for the zone
 
 A number of sub-properties, expressed as labels within the bailiwick of the "init" label, define the initialisation parameters.
 
@@ -140,11 +138,16 @@ All three MUST be present.
 
 The MNAME and RNAME MUST be fully qualified, however a terminal @ label can be supplied to indicate the member zone's name. In this case, the @ label MUST be substituted with the member zone's name at zone file creation. See also {{generalBehaviourSection}}.
 
-### Example
+### Examples
 
 ~~~~
 soa.init.$CATZ 0 TXT ( "<mname>" "<rname>"
       "<refresh> <retry> <expire> <minimum>" )
+soa.init.$CATZ 0 TXT ( "ns1.example.com"
+      "hostmaster.example.com"
+      "14400 900 2419200 3600" )
+soa.init.$CATZ 0 TXT ( "ns1.@." "hostmaster.@."
+      "14400 900 2419200 3600" )
 ~~~~
 
 ## Nameservers (ns property)
@@ -157,7 +160,7 @@ If the nameservers are in-bailiwick and address records are therefore required, 
 
 If the nameservers are in-bailiwick of a zone in the catalog, and an address is not specified, this would result in a zone that will not load - this denotes a broken catalog zone.
 
-There MUST be at least one ns property record that can be applied to a member zone, either specified directly as per {{memberZoneSection}} or in the catalog section to be inherited.
+There MUST be at least one ns property record.
 
 Therefore, a catalog zone that contains no nameserver entries applicable to a given member zone constitutes a broken catalog zone.
 
@@ -165,7 +168,7 @@ The ns property can be specified multiple times, with one nameserver specified p
 
 ### name Parameter
 
-The "name" parameter MUST be present, and contains the hostname of the nameserver as it is intended to appear in the corresponding NS record's RDATA in the zone's master file. See {{generalBehaviourSection}}.
+The "name" parameter MUST be present, and contains the hostname of the nameserver as it is intended to appear in the corresponding NS record's RDATA in the zone's master file. See also {{generalBehaviourSection}}.
 
 The value of the "name" parameter MUST be compliant with {{RFC1035}} Section 3.3.11.
 
@@ -222,11 +225,13 @@ Noting that the primary server for a given catalog's member zones may not be the
 
 ## General Behaviour {#generalBehaviourSection}
 
-Some of the parameters specified in the initialisation properties contain domain-name values as defined in {{RFC1035}} Section 3.3, for example in the NS records and in the SOA. These will be used to specify values in the corresponding resource records in the member zone's file. The domain-name values MUST be fully qualified in the parameter specification in the property. A terminal @ label MUST be substituted by the member zone name at the point of zone file creation.
+Some of the parameters specified in the initialisation properties contain domain-name values as defined in {{RFC1035}} Section 3.3, for example in the NS records and in the SOA. These will be used to specify values in the corresponding resource records in the member zone's file. The domain-name values MUST be fully qualified in the parameter specification in the property.
+
+Similar to its use in {{RFC1035}} Section 5.1, a terminal @ label may be used as a short cut for the member zone's name, and in such cases, the terminal @ label MUST be substituted by the member zone name at the point of zone file creation.
 
 ## Member Zone Removal
 
-If the member zone is removed from the catalog zone, then the zone's master file MUST be removed.
+If the member zone is removed from the catalog zone, then the zone's master file MUST be removed along with related zone configuration and state data.
 
 ## Zone-Associated State Reset
 
@@ -234,11 +239,15 @@ In the event of a zone state reset being carried out, the state of the zone's ma
 
 # Implementation and Operational Notes
 
-When configuring the use of catalog zones, implementations should give the operator the ability to indicate whether the catalog zone consumer is a primary or secondary for a given catalog's member zones, along with whether the consumer is a signer of the zone.
+When configuring the use of catalog zones, implementations should give the operator the ability to indicate whether the catalog zone consumer is a primary or secondary for a given catalog's member zones.
 
-A given consumer MAY be any combination of primary, secondary, primary+signer or secondary+signer, but of course cannot be both primary _and_ secondary.
+Secondary servers are not interested in the properties and parameters defined within this document and MUST ignore them.
+
+A given consumer MAY be primary or secondary, but of course cannot be both. A consumer that has undefined consumer status should default to secondary, which will result in backward compatibility with {{RFC9432}}.
 
 It is not mandatory that the primary server for a given catalog zone is also the primary server for the catalog's member zones.
+
+As well as creating the undelying zone file and initial contents, the implementaion MUST also dynamically create and maintain related zone configuration and state. Further, the implementation MUST load and authoritatively serve the zone to clients.
 
 # Security Considerations
 
@@ -345,13 +354,17 @@ TODO - add more detail explaining the above, reasoning, etc...?
 
 ### General
 
-Should the properties be listed in the registry as "soa.init" and "ns.init", given "init" itself is a placeholder label, and does not (currently?) take any parameters or records of its own?
-
 TODO: Do we need to signal the initial TTL of the records being added (SOA, NS, A, AAAA)... I think so... Could specifiy with an extra key=value pair, or could leave it to pick up from the SOA
 
 3.1 line 98 - I'm specifying the implementation's configuration here, and it's outside of the scope of this document to specify how an implementation names its config parameters, etc, surely?
 
 Do we even need to supply these properties? The reason an operator would be doing this would be because they want to create a zonefile with standard tooling and then immediatly commence making dynamic updates to the zone. An implementation could simply drop in basic SOA and NS with the expectation being that the operator then *replaces* them.
+
+#### ACLs...?
+
+Do we need to consider a mechanism for providing also-notify, allow-transfer and similar style ACL configuration? It seems limiting to certain use cases, otherwise, to assume that server level configuration of such parameters is enough.
+
+Some implementations facilitate this within the *.ext tree, but this is implementation specific, and unhelpful for operators using a combination of vendor products. Consider, for example, an operator using one vendor's product for unsigned primary, another for signing, and a third for serving the auth zones to the target network(s).
 
 ### coo Property
 

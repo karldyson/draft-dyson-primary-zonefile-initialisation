@@ -46,7 +46,7 @@ informative:
 
 --- abstract
 
-This document describes an update to DNS Catalog Zones ({{RFC9432}}) that facilitates a method for the primary server of a DNS zone to create the underlying master file for member zone(s) using information contained within a catalog zone.
+This document describes an update to "DNS Catalog Zones" ({{RFC9432}}) that facilitates a method for the primary server of a DNS zone to create the underlying master file for member zone(s) using information contained within a catalog zone.
 
 --- middle
 
@@ -60,7 +60,7 @@ Various DNS software products have proprietary mechanisms for achieving this, so
 
 Operators of large scale DNS systems may want to be able to signal the creation of a new file for a new zone without wanting to be tied to a particular vendor's proprietary software. Further, they may want to avoid the need or overhead of engineering a bespoke solution with the ongoing need to support and maintain it.
 
-Having dynamically provisioned a new zone on the primary server, the operator may then manage resource records in the zone via DNS Dynamic Updates ({{RFC2136}}). In this scenario, they may also want to distribute the zones to secondary servers via DNS Catalog Zones ({{RFC9432}}).
+Having dynamically provisioned a new zone on the primary server, the operator may then manage resource records in the zone via "DNS Dynamic Updates" ({{RFC2136}}). In this scenario, they may also want to distribute the zones to secondary servers via "DNS Catalog Zones" ({{RFC9432}}).
 
 This document defines a vendor-independent mechanism of signalling to the primary server that a new file is to be created for the new zone, populated with basic minimal initial zone data, and then loaded into the server to be authoritatively served.
 
@@ -72,9 +72,9 @@ Broader provisioning of the base nameserver configuration is beyond the scope of
 
 {::boilerplate bcp14-tagged}
 
-The following is in addition to the conventions and definitions as defined in DNS Catalog Zones ({{RFC9432}}).
+The following is in addition to the conventions and definitions as defined in "DNS Catalog Zones" ({{RFC9432}}).
 
-The use of parenthesis in the examples is as described in {{RFC1035}} Section 5.1.
+The use of parenthesis in the examples is as described in "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 5.1.
 
 ## Primary Server
 
@@ -86,21 +86,21 @@ However, within this document, the term "primary server" is used specifically to
 
 ## Master File
 
-The term "master file" is as per the description in {{RFC1035}} Section 5, noting that some software products offer data stores for the master file that are not an actual file on a filesystem, such as a database.
+The term "master file" is as per the description in "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 5, noting that some software products offer data stores for the master file that are not an actual file on a filesystem, such as a database.
 
 # Catalog Zone Properties
 
-This section specifies new Catalog Zone level properties, additional to those defined in DNS Catalog Zones ({{RFC9432}}).
+This section specifies new Catalog Zone level properties, additional to those defined in "DNS Catalog Zones" ({{RFC9432}}).
 
 If initialisation of the underlying master file for the member zone is not required or is disabled in an implementation's configuration, then the various initialisation properties defined in this document MAY be absent, and in that context, their absence DOES NOT constitute a broken catalog zone.
 
-However, if the initialisation of the underlying master file for the member zone is enabled, and the properties and parameters defined below constitute a broken configuration as defined in this document, then the catalog is broken, and MUST NOT be processed (DNS Catalog Zones Section 5.1 ({{RFC9432}})).
+However, if the initialisation of the underlying master file for the member zone is enabled, and the properties and parameters defined below constitute a broken configuration as defined in this document, then the catalog is broken, and MUST NOT be processed ("DNS Catalog Zones" ({{RFC9432}}) Section 5.1).
 
 ## Schema Version (version property)
 
 For this memo, the value of the version resource record is unchanged.
 
-DNS Catalog Zones ({{RFC9432}}) Section 3 is clear that "Catalog consumers MUST ignore any RRs in the catalog zone for which no processing is specified or which are otherwise not supported by the implementation." and as such the addition of the records outlined in this document will be ignored by implementations that do not recognise them.
+"DNS Catalog Zones" ({{RFC9432}}) Section 3 is clear that "Catalog consumers MUST ignore any RRs in the catalog zone for which no processing is specified or which are otherwise not supported by the implementation." and as such the addition of the records outlined in this document will be ignored by implementations that do not recognise them.
 
 ## Zone File Initialisation (init property)
 
@@ -113,6 +113,8 @@ The implementation may permit the following on a global, or per catalog basis, b
   * The master file is ONLY created for the zone if the master file does not already exist
   * The master file is NEVER created (effectively, the initialisation capability is disabled for this catalog or primary server, and the master file would be expected to exist as is the case before this document)
   * The master file is ALWAYS created when a new member zone is added to the catalog zone, overwriting any existing master file for the zone
+
+If a server is consuming a catalog zone and is configured to be primary server for the member zones therein, it MUST perform the actions as defined within this document. All other servers MUST ignore the additional records defined herein, as per "DNS Catalog Zones" ({{RFC9432}}) Section 3.
 
 A number of sub-properties, expressed as labels within the bailiwick of the "init" label, define the initialisation parameters.
 
@@ -132,7 +134,7 @@ Absence of a soa property similarly constitutes a broken catalog zone.
 
 With the exception of the serial number, the SOA record parameters are supplied as three character-string values in the RDATA of a TXT resource record.
 
-The first being the MNAME value, the second being the RNAME value, and the third containing the numeric timer values in decimal in the same order as expected in an SOA resource record, as defined in {{RFC1035}} Section 3.3.13.
+The first being the MNAME value, the second being the RNAME value, and the third containing the numeric timer values in decimal in the same order as expected in an SOA resource record, as defined in "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.3.13.
 
 All three MUST be present.
 
@@ -170,7 +172,7 @@ The ns property can be specified multiple times, with one nameserver specified p
 
 The "name" parameter MUST be present, and contains the hostname of the nameserver as it is intended to appear in the corresponding NS record's RDATA in the zone's master file. See also {{generalBehaviourSection}}.
 
-The value of the "name" parameter MUST be compliant with {{RFC1035}} Section 3.3.11.
+The value of the "name" parameter MUST be compliant with "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.3.11.
 
 An ns property record that does not contain a "name" parameter consistutes a broken catalog zone.
 
@@ -180,9 +182,9 @@ The "ipv4" and "ipv6" parameters are OPTIONAL. They contain the IP address(es) o
 
 If the value in the "name" parameter is in-bailwick, and hence requires that the relevant address enties are also created in the zone, at least one of either the "ipv4" or "ipv6" parameters MUST be specified.
 
-The value of the "ipv4" parameter, if present, MUST be a valid IPv4 address, compliant with {{RFC1035}} Section 3.4.1.
+The value of the "ipv4" parameter, if present, MUST be a valid IPv4 address, compliant with "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.4.1.
 
-The value of the "ipv6" parameter, if present, MUST be a valid IPv6 address, compliant with {{RFC3596}} Section 2.1 and SHOULD use the representation from {{RFC5952}} Section 4.
+The value of the "ipv6" parameter, if present, MUST be a valid IPv6 address, compliant with "DNS Extensions to Support IP Version 6" ({{RFC3596}}) Section 2.1 and SHOULD use the representation defined in "A Recommendation for IPv6 Address Text Representation ({{RFC5952}}) Section 4.
 
 An ns property record that contains an in-bailiwick name, but does not contain at least one address parameter constitutes a broken catalog zone.
 
@@ -225,9 +227,9 @@ Noting that the primary server for a given catalog's member zones may not be the
 
 ## General Behaviour {#generalBehaviourSection}
 
-Some of the parameters specified in the initialisation properties contain domain-name values as defined in {{RFC1035}} Section 3.3, for example in the NS records and in the SOA. These will be used to specify values in the corresponding resource records in the member zone's file. The domain-name values MUST be fully qualified in the parameter specification in the property.
+Some of the parameters specified in the initialisation properties contain domain-name values as defined in "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.3, for example in the NS records and in the SOA. These will be used to specify values in the corresponding resource records in the member zone's file. The domain-name values MUST be fully qualified in the parameter specification in the property.
 
-Similar to its use in {{RFC1035}} Section 5.1, a terminal @ label may be used as a short cut for the member zone's name, and in such cases, the terminal @ label MUST be substituted by the member zone name at the point of zone file creation.
+Similar to its use in "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 5.1, a terminal @ label may be used as a short cut for the member zone's name, and in such cases, the terminal @ label MUST be substituted by the member zone name at the point of zone file creation.
 
 ## Member Zone Removal
 
@@ -243,7 +245,7 @@ When configuring the use of catalog zones, implementations should give the opera
 
 Secondary servers are not interested in the properties and parameters defined within this document and MUST ignore them.
 
-A given consumer MAY be primary or secondary, but of course cannot be both. A consumer that has undefined consumer status should default to secondary, which will result in backward compatibility with {{RFC9432}}.
+A given consumer MAY be primary or secondary, but of course cannot be both. A consumer that has undefined consumer status should default to secondary, which will result in backward compatibility with "DNS Catalog Zones" ({{RFC9432}}).
 
 It is not mandatory that the primary server for a given catalog zone is also the primary server for the catalog's member zones.
 
@@ -251,7 +253,7 @@ As well as creating the undelying zone file and initial contents, the implementa
 
 # Security Considerations
 
-This document does not alter the security considerations outlined in DNS Catalog Zones ({{RFC9432}}).
+This document does not alter the security considerations outlined in "DNS Catalog Zones" ({{RFC9432}}).
 
 # IANA Considerations {#IANA}
 
@@ -267,7 +269,7 @@ Reference: this document
 | ns.init             | Name Server Property           | Standards Track | this document |
 {:title="DNS Catalog Zones Properies Registry"}
 
-Field meanings are unchanged from the definitions in DNS Catalog Zones ({{RFC9432}}).
+Field meanings are unchanged from the definitions in "DNS Catalog Zones" ({{RFC9432}}).
 
 --- back
 
@@ -332,7 +334,7 @@ ns1.example.net. 3600 AAAA 2001:db8:ff::149
 
 *NB: To be removed by the RFC Editor prior to publication.*
 
-The term "Primary Master" (DNS Dynamic Updates Section 1 ({{RFC2136}}) is not applicable as the primary server noted in this document likely is NOT listed in the MNAME or NS.
+The term "Primary Master" ("DNS Dynamic Updates" ({{RFC2136}}) Section 1 is not applicable as the primary server noted in this document likely is NOT listed in the MNAME or NS.
 
 ## Is catalog zones the right place for this?
 
@@ -344,7 +346,7 @@ It does feel a little bit like it muddies the waters between zone distribution a
 1. It feels less like Dynamic Updates would be the right place for it, for example; Dynamic Updates has specific purpose around updating existing zones, which seems further removed from this functionality.
 1. An API for *just* zone initialisation feels like a big thing that would likely be overkill, and probably not get implemented, and would likely be a part of a wider implementation's general nameserver configuration and operations API, which is waaaaay beyond the scope of this document, and possibly beyond standardisation.
 
-It may be considered that this is "nameserver configuration", however, it has strong parallels in this regard to the "configuration" on secondary servers, including such considerations as to which entities are allowed to notify and/or transfer the zone, as are conveyed to those secondary servers in {{RFC9432}} DNS Catalog Zones. Indeed, much of the same configuration may be needed by or shared with the primary server for those same zones.
+It may be considered that this is "nameserver configuration", however, it has strong parallels in this regard to the "configuration" on secondary servers, including such considerations as to which entities are allowed to notify and/or transfer the zone, as are conveyed to those secondary servers in "DNS Catalog Zones" ({{RFC9432}}). Indeed, much of the same configuration may be needed by or shared with the primary server for those same zones.
 
 Implementing via an extension of catalog zones feels like it closes the gap in the end-to-end ecosystem whereby catalog zones + dynamic updates gives an end-to-end approach to the creation of a zone, its underlying master file, distribution of that zone to secondary servers, and the ongoing manipulation of records in the zone.
 
@@ -356,9 +358,7 @@ TODO - add more detail explaining the above, reasoning, etc...?
 
 TODO: Do we need to signal the initial TTL of the records being added (SOA, NS, A, AAAA)... I think so... Could specifiy with an extra key=value pair, or could leave it to pick up from the SOA
 
-3.1 line 98 - I'm specifying the implementation's configuration here, and it's outside of the scope of this document to specify how an implementation names its config parameters, etc, surely?
-
-Do we even need to supply these properties? The reason an operator would be doing this would be because they want to create a zonefile with standard tooling and then immediatly commence making dynamic updates to the zone. An implementation could simply drop in basic SOA and NS with the expectation being that the operator then *replaces* them.
+Do we even need to supply these properties (soa, ns, etc) ? The reason an operator would be doing this would be because they want to create a zonefile with standard tooling and then immediatly commence making dynamic updates to the zone. An implementation could simply drop in basic SOA and NS with the expectation being that the operator then *replaces* them.
 
 #### ACLs...?
 
@@ -386,7 +386,7 @@ Given that it is pretty much expected that the operator is going to start making
 
 Is there a circular dependency or race condition issue here...?
 
-Do we need to consider the possibility of multiple IP addresses for a nameserver name? If so, maybe ipv4=192.0.2.1,192.0.2.2
+Do we need to consider the possibility of multiple IP addresses for a nameserver name? If so, maybe comma separate them like this: ipv4=192.0.2.1,192.0.2.2
 
 # Change Log
 

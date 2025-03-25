@@ -4,9 +4,9 @@
 
 Network Working Group                                           K. Dyson
 Internet-Draft                                                Nominet UK
-Updates: 9432 (if approved)                                23 March 2025
+Updates: 9432 (if approved)                                25 March 2025
 Intended status: Standards Track                                        
-Expires: 24 September 2025
+Expires: 26 September 2025
 
 
          Initialisation of Zone Files on the DNS Primary Server
@@ -42,7 +42,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 September 2025.
+   This Internet-Draft will expire on 26 September 2025.
 
 Copyright Notice
 
@@ -73,7 +73,7 @@ Table of Contents
      3.4.  Nameservers (ns property)
        3.4.1.  name Parameter
        3.4.2.  ipv4 and ipv6 Parameters
-       3.4.3.  Example
+       3.4.3.  Examples
    4.  Member Zone Properties
      4.1.  Change Of Ownership (coo property)
    5.  Name Server Behaviour
@@ -97,6 +97,7 @@ Table of Contents
        B.2.4.  ns Property
    Appendix C.  Change Log
      C.1.  00 - Initial draft
+     C.2.  00 - 01
    Acknowledgments
    Author's Address
 
@@ -279,12 +280,11 @@ Table of Contents
 
 3.3.2.  Examples
 
-   soa.init.$CATZ 0 TXT ( "<mname>" "<rname>"
-         "<refresh> <retry> <expire> <minimum>" )
    soa.init.$CATZ 0 TXT ( "ns1.example.com"
          "hostmaster.example.com"
          "14400 900 2419200 3600" )
-   soa.init.$CATZ 0 TXT ( "ns1.@." "hostmaster.@."
+
+   soa.init.$CATZ 0 TXT ( "ns1.@" "hostmaster.@"
          "14400 900 2419200 3600" )
 
 3.4.  Nameservers (ns property)
@@ -355,10 +355,11 @@ Table of Contents
    zone's administrator to ensure the delegation and any required glue
    resource records are present in the parent zone.
 
-3.4.3.  Example
+3.4.3.  Examples
 
    ns.init.$CATZ 0 TXT ( "name=some.name.server."
          "ipv4=192.0.2.1 ipv6=2001:db8::1" )
+
    ns.init.$CATZ 0 TXT ( "name=another.name.server."
          "ipv4=192.0.2.129 ipv6=2001:db8:44::1" )
 
@@ -695,9 +696,16 @@ Appendix C.  Change Log
 
 C.1.  00 - Initial draft
 
+C.2.  00 - 01
+
+   Final feedback incorporated before wider circulation for discussion
+   and feedback
+
 Acknowledgments
 
-   TODO acknowledge.
+   The author wishes to thank Ray Bellis and Ruth Trevor-Allen for their
+   reviews, feedback and discussion during the initial drafting of this
+   document.
 
 Author's Address
 

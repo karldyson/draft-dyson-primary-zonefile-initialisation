@@ -143,12 +143,11 @@ The MNAME and RNAME MUST be fully qualified, however a terminal @ label can be s
 ### Examples
 
 ~~~~
-soa.init.$CATZ 0 TXT ( "<mname>" "<rname>"
-      "<refresh> <retry> <expire> <minimum>" )
 soa.init.$CATZ 0 TXT ( "ns1.example.com"
       "hostmaster.example.com"
       "14400 900 2419200 3600" )
-soa.init.$CATZ 0 TXT ( "ns1.@." "hostmaster.@."
+
+soa.init.$CATZ 0 TXT ( "ns1.@" "hostmaster.@"
       "14400 900 2419200 3600" )
 ~~~~
 
@@ -190,11 +189,12 @@ An ns property record that contains an in-bailiwick name, but does not contain a
 
 Only records within the member zone are within the scope of this document; if the primary server is also coincidentally the primary server for a member zone's parent, regardless of whether the parent zone is also a member zone, it is the responsibility of the parent zone's administrator to ensure the delegation and any required glue resource records are present in the parent zone.
 
-### Example
+### Examples
 
 ~~~~
 ns.init.$CATZ 0 TXT ( "name=some.name.server."
       "ipv4=192.0.2.1 ipv6=2001:db8::1" )
+
 ns.init.$CATZ 0 TXT ( "name=another.name.server."
       "ipv4=192.0.2.129 ipv6=2001:db8:44::1" )
 ~~~~
@@ -394,7 +394,11 @@ Do we need to consider the possibility of multiple IP addresses for a nameserver
 
 ## 00 - Initial draft
 
+## 00 - 01
+
+Final feedback incorporated before wider circulation for discussion and feedback
+
 # Acknowledgments {#Acknowledgements}
 {:numbered="false"}
 
-TODO acknowledge.
+The author wishes to thank Ray Bellis and Ruth Trevor-Allen for their reviews, feedback and discussion during the initial drafting of this document.

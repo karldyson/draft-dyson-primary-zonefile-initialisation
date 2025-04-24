@@ -4,9 +4,9 @@
 
 Network Working Group                                           K. Dyson
 Internet-Draft                                                Nominet UK
-Updates: 9432 (if approved)                                25 March 2025
+Updates: 9432 (if approved)                                24 April 2025
 Intended status: Standards Track                                        
-Expires: 26 September 2025
+Expires: 26 October 2025
 
 
          Initialisation of Zone Files on the DNS Primary Server
@@ -42,7 +42,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 26 September 2025.
+   This Internet-Draft will expire on 26 October 2025.
 
 Copyright Notice
 
@@ -97,7 +97,8 @@ Table of Contents
        B.2.4.  ns Property
    Appendix C.  Change Log
      C.1.  00 - Initial draft
-     C.2.  00 - 01
+     C.2.  01 - Changes from 00
+     C.3.  02 - Changes from 01
    Acknowledgments
    Author's Address
 
@@ -425,7 +426,7 @@ Table of Contents
 5.3.  Zone-Associated State Reset
 
    In the event of a zone state reset being carried out, the state of
-   the zone's master file SHOULD be reset as if the file was being
+   the zone's master file MUST be reset as if the file was being
    initialised for the first time per this document.
 
 6.  Implementation and Operational Notes
@@ -534,19 +535,19 @@ A.1.  Catalog Zone Example
    the catalog, and so the address record details are supplied in order
    to facilitate the addition of the address records.
 
-   catz.invalid.                   0 SOA invalid. invalid. (
+   catz.invalid.                        0 SOA invalid. invalid. (
          1 3600 600 2419200 3600 )
-   catz.invalid.                   0 NS invalid.
-   soa.init.catz.invalid.          0 TXT ( "ns1.example.com."
+   catz.invalid.                        0 NS invalid.
+   soa.init.catz.invalid.               0 TXT ( "ns1.example.com."
          "hostmaster.example.com." "14400 900 2419200 3600" )
-   ns.init.catz.invalid.           0 TXT ( "name=ns1.example.com. "
+   ns.init.catz.invalid.                0 TXT ( "name=ns1.example.com. "
          "ipv4=192.0.2.1 ipv6=2001:db8::1" )
-   ns.init.catz.invalid.           0 TXT ( "name=ns2.example.com. "
+   ns.init.catz.invalid.                0 TXT ( "name=ns2.example.com. "
          "ipv4=192.0.2.2 ipv6=2001:db8::2" )
-   kahdkh6f.zones.catz.invalid.    0 PTR example.com.
-   hajhsjha.zones.catz.invalid.    0 PTR example.net.
-   ns.hajhsjha.zones.catz.invalid. 0 TXT "name=ns1.example.com"
-   ns.hajhsjha.zones.catz.invalid. 0 TXT ( "name=ns1.example.net "
+   kahdkh6f.zones.catz.invalid.         0 PTR example.com.
+   hajhsjha.zones.catz.invalid.         0 PTR example.net.
+   ns.init.hajhsjha.zones.catz.invalid. 0 TXT "name=ns1.example.com"
+   ns.init.hajhsjha.zones.catz.invalid. 0 TXT ( "name=ns1.example.net "
          "ipv4=192.0.2.250 ipv6=2001:db8:ff::149" )
 
 A.2.  example.com Master File Example
@@ -696,10 +697,14 @@ Appendix C.  Change Log
 
 C.1.  00 - Initial draft
 
-C.2.  00 - 01
+C.2.  01 - Changes from 00
 
    Final feedback incorporated before wider circulation for discussion
    and feedback
+
+C.3.  02 - Changes from 01
+
+   Corrected example that was missing .init. label from a member zone.
 
 Acknowledgments
 

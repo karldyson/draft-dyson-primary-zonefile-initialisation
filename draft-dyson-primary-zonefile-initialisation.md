@@ -171,17 +171,19 @@ The ns property can be specified multiple times, with one nameserver specified p
 
 The "name" parameter MUST be present, and contains the hostname of the nameserver as it is intended to appear in the corresponding NS record's RDATA in the zone's master file. See also {{generalBehaviourSection}}.
 
-The value of the "name" parameter MUST be compliant with "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.3.11.
+The value of the "name" parameter MUST be a \<domain-name> compliant with "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 5.1.
 
 An ns property record that does not contain a "name" parameter consistutes a broken catalog zone.
 
 ### ipv4 and ipv6 Parameters
 
-The "ipv4" and "ipv6" parameters are OPTIONAL. They contain the IP address(es) of the hostname specified in the "name" parameter.
+The "ipv4" and "ipv6" parameters contain the IP address(es) of the hostname specified in the "name" parameter.
 
-If the value in the "name" parameter is in-bailwick, and hence requires that the relevant address enties are also created in the zone, at least one of either the "ipv4" or "ipv6" parameters MUST be specified.
+If the value in the "name" parameter is in-bailwick, and hence requires that the relevant address enties are also created in the zone, then at least one of either the "ipv4" or "ipv6" parameters MUST be specified.
 
-The value of the "ipv4" parameter, if present, MUST be a valid IPv4 address, compliant with "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.4.1.
+Otherwise, both parameters are OPTIONAL.
+
+The value of the "ipv4" parameter, if present, MUST be a valid IPv4 address, compliant with the master file format defined in "Domain Names - Implementation and Specification" ({{RFC1035}}) Section 3.4.1, "...an Internet address expressed as four decimal numbers separated by dots without any embedded spaces...".
 
 The value of the "ipv6" parameter, if present, MUST be a valid IPv6 address, compliant with "DNS Extensions to Support IP Version 6" ({{RFC3596}}) Section 2.1 and SHOULD use the representation defined in "A Recommendation for IPv6 Address Text Representation ({{RFC5952}}) Section 4.
 
@@ -233,7 +235,9 @@ Similar to its use in "Domain Names - Implementation and Specification" ({{RFC10
 
 ## Member Zone Removal
 
-If the member zone is removed from the catalog zone, then the zone's master file MUST be removed along with related zone configuration and state data.
+If the member zone is removed from the catalog zone, then the zone's master file MUST be removed unless the implementation provides for it to be retained via a configuration option.
+
+The zone MUST cease being served, and related zone configuration and state data MUST be removed.
 
 ## Zone-Associated State Reset
 

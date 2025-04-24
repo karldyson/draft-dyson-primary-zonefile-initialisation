@@ -237,7 +237,7 @@ If the member zone is removed from the catalog zone, then the zone's master file
 
 ## Zone-Associated State Reset
 
-In the event of a zone state reset being carried out, the state of the zone's master file SHOULD be reset as if the file was being initialised for the first time per this document.
+In the event of a zone state reset being carried out, the state of the zone's master file MUST be reset as if the file was being initialised for the first time per this document.
 
 # Implementation and Operational Notes
 
@@ -286,19 +286,19 @@ The example.net. zone would utilise the default SOA record, but would utilise th
 The default nameservers are in-bailiwick of example.com, which is in the catalog, and so the address record details are supplied in order to facilitate the addition of the address records.
 
 ~~~~
-catz.invalid.                   0 SOA invalid. invalid. (
+catz.invalid.                        0 SOA invalid. invalid. (
       1 3600 600 2419200 3600 )
-catz.invalid.                   0 NS invalid.
-soa.init.catz.invalid.          0 TXT ( "ns1.example.com."
+catz.invalid.                        0 NS invalid.
+soa.init.catz.invalid.               0 TXT ( "ns1.example.com."
       "hostmaster.example.com." "14400 900 2419200 3600" )
-ns.init.catz.invalid.           0 TXT ( "name=ns1.example.com. "
+ns.init.catz.invalid.                0 TXT ( "name=ns1.example.com. "
       "ipv4=192.0.2.1 ipv6=2001:db8::1" )
-ns.init.catz.invalid.           0 TXT ( "name=ns2.example.com. "
+ns.init.catz.invalid.                0 TXT ( "name=ns2.example.com. "
       "ipv4=192.0.2.2 ipv6=2001:db8::2" )
-kahdkh6f.zones.catz.invalid.    0 PTR example.com.
-hajhsjha.zones.catz.invalid.    0 PTR example.net.
-ns.hajhsjha.zones.catz.invalid. 0 TXT "name=ns1.example.com"
-ns.hajhsjha.zones.catz.invalid. 0 TXT ( "name=ns1.example.net "
+kahdkh6f.zones.catz.invalid.         0 PTR example.com.
+hajhsjha.zones.catz.invalid.         0 PTR example.net.
+ns.init.hajhsjha.zones.catz.invalid. 0 TXT "name=ns1.example.com"
+ns.init.hajhsjha.zones.catz.invalid. 0 TXT ( "name=ns1.example.net "
       "ipv4=192.0.2.250 ipv6=2001:db8:ff::149" )
 ~~~~
 
@@ -394,9 +394,13 @@ Do we need to consider the possibility of multiple IP addresses for a nameserver
 
 ## 00 - Initial draft
 
-## 00 - 01
+## 01 - Changes from 00
 
 Final feedback incorporated before wider circulation for discussion and feedback
+
+## 02 - Changes from 01
+
+Corrected example that was missing .init. label from a member zone.
 
 # Acknowledgments {#Acknowledgements}
 {:numbered="false"}

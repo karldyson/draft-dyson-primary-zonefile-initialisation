@@ -8,5 +8,6 @@
                 "cmd": "make"
             }
         ]
-    }
+    },
+    "makefile.configureOnOpen": false
 }

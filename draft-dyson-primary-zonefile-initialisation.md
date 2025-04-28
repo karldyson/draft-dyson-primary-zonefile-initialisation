@@ -253,7 +253,7 @@ A given consumer MAY be primary or secondary, but of course cannot be both. A co
 
 It is not mandatory that the primary server for a given catalog zone is also the primary server for the catalog's member zones.
 
-As well as creating the undelying zone file and initial contents, the implementaion MUST also dynamically create and maintain related zone configuration and state. Further, the implementation MUST load and authoritatively serve the zone to clients.
+As well as creating the undelying zone file and initial contents, the implementation MUST also dynamically create and maintain related zone configuration and state. Further, the implementation MUST load and authoritatively serve the zone to clients.
 
 # Security Considerations
 
@@ -293,6 +293,7 @@ The default nameservers are in-bailiwick of example.com, which is in the catalog
 catz.invalid.                        0 SOA invalid. invalid. (
       1 3600 600 2419200 3600 )
 catz.invalid.                        0 NS invalid.
+version.catz.invalid.                0 TXT "2"
 soa.init.catz.invalid.               0 TXT ( "ns1.example.com."
       "hostmaster.example.com." "14400 900 2419200 3600" )
 ns.init.catz.invalid.                0 TXT ( "name=ns1.example.com. "
@@ -308,7 +309,7 @@ ns.init.hajhsjha.zones.catz.invalid. 0 TXT ( "name=ns1.example.net "
 
 ## example.com Master File Example
 
-This is the resulting zonefile for example.com as initilised from the above catalog zone example.
+This is the resulting zonefile for example.com as initialised from the above catalog zone example.
 
 ~~~~
 example.com.     3600 SOA ns1.example.com. hostmaster.example.com. (
@@ -323,7 +324,7 @@ ns2.example.com. 3600 AAAA 2001:db8::2
 
 ## example.net Master File Example
 
-This is the resulting zonefile for example.net as initilised from the above catalog zone example.
+This is the resulting zonefile for example.net as initialised from the above catalog zone example.
 
 ~~~~
 example.net.     3600 SOA ns1.example.com. hostmaster.example.com. (
@@ -360,9 +361,9 @@ TODO - add more detail explaining the above, reasoning, etc...?
 
 ### General
 
-TODO: Do we need to signal the initial TTL of the records being added (SOA, NS, A, AAAA)... I think so... Could specifiy with an extra key=value pair, or could leave it to pick up from the SOA
+TODO: Do we need to signal the initial TTL of the records being added (SOA, NS, A, AAAA)... I think so... Could specify with an extra key=value pair, or could leave it to pick up from the SOA
 
-Do we even need to supply these properties (soa, ns, etc) ? The reason an operator would be doing this would be because they want to create a zonefile with standard tooling and then immediatly commence making dynamic updates to the zone. An implementation could simply drop in basic SOA and NS with the expectation being that the operator then *replaces* them.
+Do we even need to supply these properties (soa, ns, etc) ? The reason an operator would be doing this would be because they want to create a zonefile with standard tooling and then immediately commence making dynamic updates to the zone. An implementation could simply drop in basic SOA and NS with the expectation being that the operator then *replaces* them.
 
 #### ACLs...?
 
@@ -384,7 +385,7 @@ Should we permit the property to be made up of multiple TXT records so long as a
 
 Should we specify a SOA serial format? or an initial soa serial value...? If not, should we specify in the text, or leave it to the implemention, which may have a default, such as BIND's "serial-update-method"
 
-Given that it is pretty much expected that the operator is going to start making changes to the zone via dynamic updates, it'd be reasonable to expect them to be able to set those parameters. Which does beg the question, do we need to specify soa and nameserver values at all, or just specify that the zone file is or is not to be created, and fill some template default values with the expectation that the operator would immediatly overwrite them with "correct" values...?
+Given that it is pretty much expected that the operator is going to start making changes to the zone via dynamic updates, it'd be reasonable to expect them to be able to set those parameters. Which does beg the question, do we need to specify soa and nameserver values at all, or just specify that the zone file is or is not to be created, and fill some template default values with the expectation that the operator would immediately overwrite them with "correct" values...?
 
 ### ns Property
 
@@ -410,3 +411,5 @@ Corrected example that was missing .init. label from a member zone.
 {:numbered="false"}
 
 The author wishes to thank Ray Bellis and Ruth Trevor-Allen for their reviews, feedback and discussion during the initial drafting of this document.
+
+Further, the author would like to thank the following for providing review, feedback and contribution to the document: Peter Thomassen, Ian Gatenby, David Groves.
